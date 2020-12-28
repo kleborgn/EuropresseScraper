@@ -6,53 +6,61 @@ import rm_dupes
 import makepdf
 import datetime
 import send_mail
+import wait_mail
+import time
 
 url = 'https://nouveau.europresse.com/access/ip/default.aspx?un=BDP'
 url2 = 'https://nouveau.europresse.com/Pdf/Edition?sourceCode=LM_P'
 
-# Get login cookie
-s = requests.Session()
-r = s.get(url)
+while 1:
+    # Waiting for email
 
-# Get pdf reader page
-r2 = s.get(url2)
+    wait_mail.waiting_for_mail()
 
-p = re.compile('(?<=_docNameList = )(.*)(?=;)')
+    # Get login cookie
+    s = requests.Session()
+    r = s.get(url)
 
-parsed = p.findall(r2.text)
+    # Get pdf reader page
+    r2 = s.get(url2)
 
-pages = json.loads(parsed[0])
+    p = re.compile('(?<=_docNameList = )(.*)(?=;)')
 
-pageNb = 1
+    parsed = p.findall(r2.text)
 
-print("[+] Downloading pages...")
+    pages = json.loads(parsed[0])
 
-for page in pages:
-    eurl = urllib.parse.quote(page, safe='~()*!.\'')
-    r3 = s.get("https://nouveau.europresse.com/Pdf/ImageList?docName=" + eurl)
+    pageNb = 1
 
-    r4 = s.get("https://nouveau.europresse.com/Pdf/Image?imageIndex=0&id=" + eurl)
+    print("[+] Downloading pages...")
 
-    file = open(str(pageNb) + ".png", "wb")
-    file.write(r4.content)
-    file.close()
-    pageNb+=1
+    for page in pages:
+        eurl = urllib.parse.quote(page, safe='~()*!.\'')
+        r3 = s.get("https://nouveau.europresse.com/Pdf/ImageList?docName=" + eurl)
 
-# Delete dupes
+        r4 = s.get("https://nouveau.europresse.com/Pdf/Image?imageIndex=0&id=" + eurl)
 
-print("[+] Checking for duplicates...")
-rm_dupes.check_for_duplicates('.')
-print("[+] Duplicates deleted.")
-# Make PDF
+        file = open(str(pageNb) + ".png", "wb")
+        file.write(r4.content)
+        file.close()
+        pageNb+=1
 
-print("[+] Making PDF...")
-makepdf.makePdf("LeMonde", '.')
+    # Delete dupes
 
-# Send email
-print("[+] Sending mail...")
-send_mail.send()
-print("[+] Mail sent !")
-# Clear
+    print("[+] Checking for duplicates...")
+    rm_dupes.check_for_duplicates('.')
+    print("[+] Duplicates deleted.")
+    # Make PDF
 
-print("Clearing files...")
-rm_dupes.clear('.')
+    print("[+] Making PDF...")
+    makepdf.makePdf("LeMonde", '.')
+
+    # Send email
+    print("[+] Sending mail...")
+    send_mail.send()
+    print("[+] Mail sent !")
+    # Clear
+
+    print("Clearing files...")
+    rm_dupes.clear('.')
+    time.sleep(300)

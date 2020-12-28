@@ -1,4 +1,4 @@
-import email, smtplib, ssl, datetime
+import email, smtplib, ssl, datetime, logs
 
 from email import encoders
 from email.mime.base import MIMEBase
@@ -9,9 +9,9 @@ def send():
 
     subject = datetime.datetime.now().strftime("%d-%m-%Y")
     body = "This mail was sent by a bot"
-    sender_email = ""
-    receiver_email = ""
-    password = ""
+    sender_email = logs.sender_email
+    receiver_email = logs.receiver_email
+    password = logs.sender_password
 
     # Create a multipart message and set headers
     message = MIMEMultipart()
